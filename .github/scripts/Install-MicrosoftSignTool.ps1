@@ -12,6 +12,7 @@ $windowsSdkPath = "C:\WindowsSDK"
 if ((Test-Path $windowsSdkFilePath) -eq $false) {
     try {
 	    Invoke-WebRequest -Uri $windowsSdkDownloadUrl -Method Get -OutFile $windowsSdkFilePath -ErrorAction Stop
+        Unblock-File -Path $windowsSdkFilePath -ErrorAction Stop
     } catch {
         Write-Host "Failed to download the Windows SDK!. $($_.Exception.Message)" -ForegroundColor Red
         exit 1
@@ -21,6 +22,7 @@ if ((Test-Path $windowsSdkFilePath) -eq $false) {
 if ((Test-Path $visualCppRedistFilePath) -eq $false) {
     try {
 	    Invoke-WebRequest -Uri $visualCppRuntimeUrl -Method Get -OutFile $visualCppRedistFilePath -ErrorAction Stop
+        Unblock-File -Path $visualCppRedistFilePath -ErrorAction Stop
     } catch {
         Write-Host "Failed to download the Visual C++!. $($_.Exception.Message)" -ForegroundColor Red
         exit 1
@@ -30,6 +32,7 @@ if ((Test-Path $visualCppRedistFilePath) -eq $false) {
 if ((Test-Path $officeSipX86FilePath) -eq $false) {
     try {
 	    Invoke-WebRequest -Uri $officeSipX86DownloadUrl -Method Get -OutFile $officeSipX86FilePath -ErrorAction Stop
+        Unblock-File -Path $officeSipX86FilePath -ErrorAction Stop
     } catch {
         Write-Host "Failed to download the Office SIP!. $($_.Exception.Message)" -ForegroundColor Red
         exit 1
