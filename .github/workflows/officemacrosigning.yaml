@@ -10,3 +10,6 @@ jobs:
             - name: Install Microsoft SignTool
               run: .github/scripts/Install-MicrosoftSignTool.ps1
               shell: pwsh
+            - name: Sign Office Macros
+              run: .github/scripts/OfficeMacroSigning.ps1
+              shell: pwsh
