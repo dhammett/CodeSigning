@@ -1,6 +1,6 @@
 param(
 	[Parameter(Mandatory=$true)]
-	[string]$Base64Cert
+	[string]$Base64Cert,
 	[Parameter(Mandatory=$true)]
 	[string]$Password
 )
