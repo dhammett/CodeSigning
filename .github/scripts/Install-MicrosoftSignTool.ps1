@@ -69,7 +69,9 @@ if ($process.ExitCode -ne 0) {
     exit $process.ExitCode
 }
 
-$env:PATH
+$windowsSdkRegistry = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows Kits\10\SDKInstallations"
+$windowsSdkRegistry.InstallationPath
+Test-Path "$($windowsSdkRegistry.InstallationPath)signtool.exe"
 
 # New-SelfSignedCertificate -Type CodeSigningCert -KeyAlgorithm RSA -KeyLength 2048 -KeyExportPolicy Exportable -Subject "E=david.hammett@domain.net,CN=David Hammett" -CertStoreLocation "Cert:\CurrentUser\My"
 # OffSign.bat "C:\WindowsSDK\bin\10.0.28000.0\x86\" "sign /f C:\Users\Administrator\Documents\CodeSigning.pfx /p Password1 /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "C:\Users\Administrator\Documents\Button Macro Test Signed.xlsm"
