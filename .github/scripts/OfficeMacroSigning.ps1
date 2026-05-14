@@ -36,23 +36,30 @@ try {
     }
 	
 	$Base64Cert | Out-File "$($env:TEMP)\CodeSigning.pfx.txt" -Force -ErrorAction Stop
-	Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\CodeSiging.pfx" -Wait -ErrorAction Stop
-	
-	if ((Test-Path ".\SignedDocuments") -eq $false) {
-		New-Item -Path ".\" -Name "SignedDocuments" -ItemType "Directory" -ErrorAction Stop | Out-Null
+	Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\CodeSigning.pfx" -Wait -ErrorAction Stop
+    if ((Test-Path "$($env:TEMP)\CodeSigning.pfx") -eq $false) {
+        Write-Host "Code signing PFX file is not found!"
+        exit 1
+    }
+
+	if ((Test-Path ".\Office\SignedDocuments") -eq $false) {
+		New-Item -Path ".\Office" -Name "SignedDocuments" -ItemType "Directory" -ErrorAction Stop | Out-Null
 	}
 	
 	$officeFiles = Get-ChildItem -Path ".\Office\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
+
 	foreach ($officeFile in $officeFiles) {
-		$process = (Start-Process -FilePath "C:\OfficeSIP\OffSign.bat" -ArgumentList $signtool.Path,"sign /f $($env:TEMP)\CodeSigning.pfx /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256","verify /pa",$officeFile.FullName -Passthru -Wait)
-		if ($process.ExitCode -ne 0) {
-			Write-Host "Code signing failed on file $($officeFile.FullName). Error Code $($process.ExitCode)"
+		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $($env:TEMP)\CodeSigning.pfx /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
+		if ($LASTEXITCODE -ne 0) {
+			Write-Host "Code signing failed on file $($officeFile.FullName). Error Code $LASTEXITCODE"
 			continue
 		}
 		
-		Move-Item -Path $officeFile.FullName -Destination ".\SignedDocuments"
+		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -ErrorAction Stop
 	}
 } catch {
     Write-Host "Failed to code sign office macros. $($_.Exception.Message)"
     exit 1
 }
+
+Remove-Item -Path "$($env:TEMP)\CodeSigning.pfx","$($env:TEMP)\CodeSigning.pfx.txt" -ErrorAction SilentlyContinue
