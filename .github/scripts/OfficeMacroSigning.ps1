@@ -45,7 +45,7 @@ try {
         exit 1
     }
 
-    Import-Certificate -FilePath "$($env:TEMP)\Root.cer" -CertStoreLocation "cert:\LocalMachine\Root" -ErrorAction Stop
+    Import-Certificate -FilePath "$($env:TEMP)\Root.cer" -CertStoreLocation "cert:\LocalMachine\Root" -ErrorAction Stop | Out-Null
     if ($null -ne $IntermidateCert -and $IntermidateCert -ne "") {
         $IntermidateCert | Out-File "$($env:TEMP)\Intermediate.cer" -Force -ErrorAction Stop
         if ((Test-Path "$($env:TEMP)\Intermediate.cer") -eq $false) {
@@ -53,7 +53,7 @@ try {
             exit 1
         }
 
-        Import-Certificate -FilePath "$($env:TEMP)\Intermediate.cer" -CertStoreLocation "cert:\LocalMachine\CA" -ErrorAction Stop
+        Import-Certificate -FilePath "$($env:TEMP)\Intermediate.cer" -CertStoreLocation "cert:\LocalMachine\CA" -ErrorAction Stop | Out-Null
     }
 
 	Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\CodeSigning.pfx" -Wait -ErrorAction Stop
