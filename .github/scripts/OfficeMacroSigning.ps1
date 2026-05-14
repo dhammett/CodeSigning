@@ -1,6 +1,9 @@
 param(
 	[Parameter(Mandatory=$true)]
 	[string]$Base64Cert,
+    [Parameter(Mandatory=$true)]
+    [string]$RootCert,
+    [string]$IntermidateCert,
 	[Parameter(Mandatory=$true)]
 	[string]$Password
 )
@@ -36,6 +39,23 @@ try {
     }
 	
 	$Base64Cert | Out-File "$($env:TEMP)\CodeSigning.pfx.txt" -Force -ErrorAction Stop
+    $RootCert | Out-File "$($env:TEMP)\Root.cer" -Force -ErrorAction Stop
+    if ((Test-Path "$($env:TEMP)\Root.cer") -eq $false) {
+        Write-Host "Root certificate not found!"
+        exit 1
+    }
+
+    Import-Certificate -FilePath "$($env:TEMP)\Root.cer" -CertStoreLocation "cert:\LocalMachine\Root" -ErrorAction Stop
+    if ($null -ne $IntermidateCert -and $IntermidateCert -ne "") {
+        $IntermidateCert | Out-File "$($env:TEMP)\Intermediate.cer" -Force -ErrorAction Stop
+        if ((Test-Path "$($env:TEMP)\Intermediate.cer") -eq $false) {
+            Write-Host "Intermediate certificate not found!"
+            exit 1
+        }
+
+        Import-Certificate -FilePath "$($env:TEMP)\Intermediate.cer" -CertStoreLocation "cert:\LocalMachine\CA" -ErrorAction Stop
+    }
+
 	Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\CodeSigning.pfx" -Wait -ErrorAction Stop
     if ((Test-Path "$($env:TEMP)\CodeSigning.pfx") -eq $false) {
         Write-Host "Code signing PFX file is not found!"
@@ -47,6 +67,7 @@ try {
 	}
 	
 	$officeFiles = Get-ChildItem -Path ".\Office\*" -Include "*.docm","*.dotm","*.pptm","*.potm","*.ppsm","*.ppam","*.xlsm","*.xltm" -ErrorAction Stop
+    $officeFileCount = 0
 
 	foreach ($officeFile in $officeFiles) {
 		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $($env:TEMP)\CodeSigning.pfx /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
@@ -56,10 +77,16 @@ try {
 		}
 		
 		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -ErrorAction Stop
+        $officeFileCount++
 	}
 } catch {
     Write-Host "Failed to code sign office macros. $($_.Exception.Message)"
     exit 1
 }
 
-Remove-Item -Path "$($env:TEMP)\CodeSigning.pfx","$($env:TEMP)\CodeSigning.pfx.txt" -ErrorAction SilentlyContinue
+Remove-Item -Path "$($env:TEMP)\CodeSigning.pfx","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\Root.cer","$($env:TEMP)\Intermediate.cer" -ErrorAction SilentlyContinue
+
+If ($officeFileCount -ne $officeFiles.Count) {
+    Write-Host "Code signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
+    exit 1
+}

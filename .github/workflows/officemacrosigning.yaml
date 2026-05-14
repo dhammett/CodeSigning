@@ -11,12 +11,10 @@ jobs:
               run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
               shell: pwsh
             - name: Sign Office Macros
-              run: .github/scripts/OfficeMacroSigning.ps1 -Base64Cert '${{ secrets.CODE_SIGNING_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}'
+              run: .github/scripts/OfficeMacroSigning.ps1 -Base64Cert '${{ secrets.CODE_SIGNING_CERT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}'
               shell: pwsh
             - name: Commit changes to GitHub
               run: |
-                git config --local user.email "action@github.com"
-                git config --local user.name "GitHub Action"
                 git add *
-                git commit -m "Signed office macros"
+                git commit -m "Office macros signed"
                 git push origin ${{ github.ref }}
