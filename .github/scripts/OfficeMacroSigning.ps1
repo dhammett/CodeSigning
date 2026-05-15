@@ -76,7 +76,7 @@ try {
 			continue
 		}
 		
-		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -ErrorAction Stop
+		#Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -ErrorAction Stop
         $officeFileCount++
 	}
 } catch {
@@ -86,7 +86,7 @@ try {
 
 Remove-Item -Path "$($env:TEMP)\CodeSigning.pfx","$($env:TEMP)\CodeSigning.pfx.txt","$($env:TEMP)\Root.cer","$($env:TEMP)\Intermediate.cer" -ErrorAction SilentlyContinue
 
-If ($officeFileCount -ne $officeFiles.Count) {
-    Write-Host "Code signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
+Write-Host "Code signing succeeeded for $officeFileCount out of $($officeFiles.Count)"
+if ($officeFileCount -ne $officeFiles.Count) {
     exit 1
 }
