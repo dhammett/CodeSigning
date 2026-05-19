@@ -132,7 +132,7 @@ foreach ($officeFile in $officeFiles) {
 	}
 	
 	try {
-		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -ErrorAction Stop
+		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -Force -ErrorAction Stop
 	} catch {
 		Write-Host "Moving file $($officeFile.FullName) failed. $($_.Exception.Message)"
 		continue
