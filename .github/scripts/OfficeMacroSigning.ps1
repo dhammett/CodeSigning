@@ -132,17 +132,13 @@ foreach ($officeFile in $officeFiles) {
 	}
 	
 	try {
-		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -ErrorAction Stop
+		Move-Item -Path $officeFile.FullName -Destination ".\Office\SignedDocuments" -Force -ErrorAction Stop
 	} catch {
 		Write-Host "Moving file $($officeFile.FullName) failed. $($_.Exception.Message)"
 		continue
 	}
 	
 	$officeFileCount++
-}
-} catch {
-    Write-Host "Failed to code sign office macros. $($_.Exception.Message)"
-    exit 1
 }
 
 Remove-Item -Path $codeSigningPfxPath,$codeSigningPemPath,$rootCertPath,$intermidateCertPath -ErrorAction SilentlyContinue
