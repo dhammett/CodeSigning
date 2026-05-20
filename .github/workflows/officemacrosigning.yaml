@@ -12,7 +12,7 @@ jobs:
         - name: Checkout Repository
           uses: actions/checkout@v6
           with:
-            ref: ${{ github.ref }}
+            ref: ${{ github.ref_name }}
         - name: Install Microsoft SignTool
           run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
           shell: pwsh
