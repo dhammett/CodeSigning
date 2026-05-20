@@ -4,6 +4,8 @@ on:
   pull_request_review:
     types:
       - submitted
+  merge_group:
+    types: [checks_requested]
 jobs:
   office-macro-signing:
     if: github.event.review.state == 'approved'
