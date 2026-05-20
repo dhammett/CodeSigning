@@ -1,5 +1,4 @@
 name: office-macro-signing
-run-name: Office Macro Signing Action
 on:
   pull_request_review:
     types:
