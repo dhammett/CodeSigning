@@ -2,27 +2,27 @@ name: office-macro-signing
 run-name: Office Macro Signing Action
 on:
   pull_request:
-    branches: ["main"]
-  merge_group:
-    types: [checks_requested]
+    types:
+      - closed
 jobs:
-    office-macro-signing:
-        runs-on: windows-latest
-        steps:
-            - name: Checkout Repository
-              uses: actions/checkout@v6
-              with:
-                ref: ${{ github.head_ref }}
-            - name: Install Microsoft SignTool
-              run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
-              shell: pwsh
-            - name: Sign Office Macros
-              run: .github/scripts/OfficeMacroSigning.ps1 -Base64Cert '${{ secrets.CODE_SIGNING_CERT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}'
-              shell: pwsh
-            - name: Commit changes to GitHub
-              run: |
-                git config --local user.email "github-actions@github.com"
-                git config --local user.name "GitHub Actions Code Signing"
-                git add *
-                git commit -m "GitHub Action Office macros signed"
-                git push
+  if_merged:
+    if: github.event.pull_request.merged == true
+    runs-on: windows-latest
+    steps:
+        - name: Checkout Repository
+          uses: actions/checkout@v6
+          with:
+            ref: ${{ github.head_ref }}
+        - name: Install Microsoft SignTool
+          run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
+          shell: pwsh
+        - name: Sign Office Macros
+          run: .github/scripts/OfficeMacroSigning.ps1 -Base64Cert '${{ secrets.CODE_SIGNING_CERT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}'
+          shell: pwsh
+        - name: Commit changes to GitHub
+          run: |
+            git config --local user.email "github-actions@github.com"
+            git config --local user.name "GitHub Actions Code Signing"
+            git add *
+            git commit -m "GitHub Action Office macros signed"
+            git push
