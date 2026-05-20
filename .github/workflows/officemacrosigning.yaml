@@ -6,8 +6,6 @@ on:
       - submitted
   merge_group:
   workflow_dispatch:
-env:
-  GH_TOKEN: ${{ github.token }}
 jobs:
   office-macro-signing:
     name: office-macro-signing
@@ -31,4 +29,3 @@ jobs:
             git add *
             git commit -m "GitHub Action Office macros signed"
             git push
-            gh pr review --approve
