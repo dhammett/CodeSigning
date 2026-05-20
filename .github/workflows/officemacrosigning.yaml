@@ -30,3 +30,4 @@ jobs:
             git add *
             git commit -m "GitHub Action Office macros signed"
             git push
+            gh pr review --approve
