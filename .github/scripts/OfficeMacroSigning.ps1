@@ -1,11 +1,21 @@
 param(
-	[Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
 	[string]$Base64Cert,
-    [Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
     [string]$RootCert,
+	[Parameter(ParameterSetName="SignTool")]
+	[Parameter(ParameterSetName="AzureSignTool")]
     [string]$IntermidateCert,
-	[Parameter(Mandatory=$true)]
-	[string]$Password
+	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string]$Password,
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string]$TenantId,
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string]$ClientId,
+	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[string]$CertName
 )
 try {
     $windowsSdkRegistry = Get-ItemProperty -Path "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows Kits\Installed Roots" -ErrorAction Stop
@@ -54,11 +64,24 @@ $codeSigningPfxPath = "$($env:TEMP)\CodeSigning.pfx"
 $rootCertPath = "$($env:TEMP)\Root.cer"
 $intermidateCertPath = "$($env:TEMP)\Intermediate.cer"
 
-try {
-	$Base64Cert | Out-File $codeSigningPemPath -Force -ErrorAction Stop
-} catch {
-	Write-Host "Downloading CodeSigning cert from GitHub secret failed. $($_.Exception.Message)"
-	exit 1
+if ($PSBoundParameters.ContainsKey("Base64Cert")) {
+	try {
+		$Base64Cert | Out-File $codeSigningPemPath -Force -ErrorAction Stop
+	} catch {
+		Write-Host "Downloading CodeSigning cert from GitHub secret failed. $($_.Exception.Message)"
+		exit 1
+	}
+
+	try {
+		Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode",$codeSigningPemPath,$codeSigningPfxPath -Wait -ErrorAction Stop
+		if ((Test-Path $codeSigningPfxPath) -eq $false) {
+			Write-Host "Code signing PFX file is not found!"
+			exit 1
+		}
+	} catch {
+		Write-Host "Converting CodeSigning PEM to PFX failed. $($_.Exception.Message)"
+		exit 1
+	}
 }
 
 try {
@@ -81,7 +104,7 @@ try {
 }
 
 try {
-    if ($null -ne $IntermidateCert -and $IntermidateCert -ne "") {
+    if ($PSBoundParameters.ContainsKey("IntermidateCert")) {
         $IntermidateCert | Out-File $intermidateCertPath -Force -ErrorAction Stop
         if ((Test-Path $intermidateCertPath) -eq $false) {
             Write-Host "Intermediate certificate not found!"
@@ -92,17 +115,6 @@ try {
     }
 } catch {
 	Write-Host "Importing intermediate cert into cert store failed. $($_.Exception.Message)"
-	exit 1
-}
-
-try {
-	Start-Process -FilePath "$($env:SYSTEMROOT)\System32\certutil.exe" -ArgumentList "-decode",$codeSigningPemPath,$codeSigningPfxPath -Wait -ErrorAction Stop
-    if ((Test-Path $codeSigningPfxPath) -eq $false) {
-        Write-Host "Code signing PFX file is not found!"
-        exit 1
-    }
-} catch {
-	Write-Host "Converting CodeSigning PEM to PFX failed. $($_.Exception.Message)"
 	exit 1
 }
 
@@ -125,7 +137,12 @@ try {
 $officeFileCount = 0
 
 foreach ($officeFile in $officeFiles) {
-	& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $codeSigningPfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
+	if ($PSBoundParameters.ContainsKey("Base64Cert")) {
+		& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $codeSigningPfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($officeFile.FullName)"
+	} elseif ($PSBoundParameters.ContainsKey("ClientId")) {
+		& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu https://cs-vault-prod-pki.vault.azure.net -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($officeFile.FullName)"
+	}
+
 	if ($LASTEXITCODE -ne 0) {
 		Write-Host "Code signing failed on file $($officeFile.FullName). Error Code $LASTEXITCODE"
 		continue

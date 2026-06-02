@@ -6,11 +6,13 @@ $windowsSdkDownloadUrl = "https://go.microsoft.com/fwlink/?linkid=2361309"
 $officeSipX86DownloadUrl = "https://download.microsoft.com/download/c53e473c-3060-4ee9-ac5c-0ddbbeced4e5/OfficeSips_x86_16-0-19416-43425.exe"
 $visualCppRuntimeUrl = "https://download.microsoft.com/download/C/6/D/C6D0FD4E-9E53-4897-9B91-836EBA2AACD3/vcredist_x86.exe"
 $azureSignToolUrl = "https://github.com/vcsjones/AzureSignTool/releases/download/v7.0.0/AzureSignTool-x64.exe"
+$dotNetDownloadUrl = "https://builds.dotnet.microsoft.com/dotnet/Sdk/10.0.300/dotnet-sdk-10.0.300-win-x86.exe"
 
 $windowsSdkFilePath = "$($env:TEMP)\winsdksetup.exe"
 $officeSipX86FilePath = "$($env:TEMP)\OfficeSips_x86_16-0-19416-43425.exe"
 $visualCppRedistFilePath = "$($env:TEMP)\vcredist_x86.exe"
-$azureSignToolFilePath = "$($env:TEMP)\AzureSignTool-x64.exe"
+$azureSignToolFilePath = "$($env:TEMP)\AzureSignTool.exe"
+$dotnetFilePath = "$($env:TEMP)\dotnet-sdk-10.0.300-win-x86.exe"
 $regsvr32FilePath = "$($env:SYSTEMROOT)\System32\regsvr32.exe"
 $officeSipPath = "C:\OfficeSIP"
 
@@ -54,6 +56,16 @@ if ((Test-Path $azureSignToolFilePath) -eq $false) {
     }
 }
 
+if ((Test-Path $dotnetFilePath) -eq $false) {
+    try {
+	    Invoke-WebRequest -Uri $dotNetDownloadUrl -Method Get -OutFile $dotnetFilePath -ErrorAction Stop
+        Unblock-File -Path $dotnetFilePath -ErrorAction Stop
+    } catch {
+        Write-Host "Failed to download the .NET!. $($_.Exception.Message)" -ForegroundColor Red
+        exit 1
+    }
+}
+
 if ($Latest.IsPresent) {
 	$process = (Start-Process -FilePath $windowsSdkFilePath -ArgumentList "/features","OptionId.SigningTools","/q","/norestart" -PassThru -Wait)
 	if ($process.ExitCode -ne 0) {
@@ -84,6 +96,14 @@ $process = (Start-Process -FilePath $regsvr32FilePath -ArgumentList "/s","$offic
 if ($process.ExitCode -ne 0) {
     Write-Host "Registering $officeSipPath\msosipx.dll returned error code $($process.ExitCode)" -ForegroundColor Red
     exit $process.ExitCode
+}
+
+try {
+    Move-Item $azureSignToolFilePath $officeSipPath -Force -ErrorAction Stop
+    Copy-Item "./.github/scripts/AzureOffSign.bat" "$officeSipPath" -Force -ErrorAction Stop
+} catch {
+    Write-Host "Failed to move AzureSignTool and/or copy AzureOffSign.bat. $($_.Exception.Message)"
+    exit 1
 }
 
 # OffSign.bat "C:\WindowsSDK\bin\10.0.28000.0\x86\" "sign /f C:\Users\Administrator\Documents\CodeSigning.pfx /p Password1 /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "C:\Users\Administrator\Documents\Button Macro Test Signed.xlsm"
