@@ -23,7 +23,7 @@ jobs:
           run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
           shell: pwsh
         - name: Sign Office Macros
-          run: .github/scripts/OfficeMacroSigning.ps1 -ClientId '${{ secrets.CODE_SIGNING_CLIENTID }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_CLIENTSECRET }}' -CertName 'OfficeMacroSigning' -Path '.\Office'
+          run: .github/scripts/OfficeMacroSigning.ps1 -ClientId '${{ secrets.CODE_SIGNING_CLIENTID }}' -TenantId '${{ secrets.CODE_SIGNING_TENANTID }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_CLIENTSECRET }}' -CertName 'OfficeMacroSigning' -Path '.\Office'
           shell: pwsh
         - name: Commit changes to GitHub
           run: |
