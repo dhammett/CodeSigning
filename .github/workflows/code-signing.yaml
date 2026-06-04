@@ -6,8 +6,6 @@ on:
       - submitted
   merge_group:
   workflow_dispatch:
-env:
-  GH_TOKEN: ${{ github.token }}
 
 jobs:
   code-signing:
@@ -30,8 +28,8 @@ jobs:
           run: .github/scripts/CodeSigning.ps1 -ClientId '${{ secrets.CODE_SIGNING_CLIENTID }}' -TenantId '${{ secrets.CODE_SIGNING_TENANTID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_CLIENTSECRET }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path '.\Office'
         - name: Commit changes to GitHub
           run: |
-            git config --local user.email "github-actions@github.com"
-            git config --local user.name "GitHub Actions Code Signing"
+            git config --local user.name "${{ github.event.pull_request.user.login }}"
+            git config --local user.email "${{ github.event.pull_request.user.login }}@users.noreply.github.com"
             git add *
             git commit -m "GitHub Action Office macros signed"
             git push
