@@ -1,6 +1,9 @@
 name: code-signing
 run-name: Code Signing
 on:
+  pull_request:
+    types:
+      - opened
   pull_request_review:
     types:
       - submitted
@@ -37,7 +40,7 @@ jobs:
           shell: pwsh
           run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
         - name: Sign Office Macros
-          if:  contains(github.event.pull_request.labels.*.name, 'office-macros')
+          if:  contains( github.event.pull_request.labels.*.name, 'office-macros' )
           shell: pwsh
           run: .github/scripts/CodeSigning.ps1 -ClientId '${{ secrets.CODE_SIGNING_CLIENTID }}' -TenantId '${{ secrets.CODE_SIGNING_TENANTID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_CLIENTSECRET }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path '.\Office'
         - name: Commit changes to GitHub
@@ -45,5 +48,5 @@ jobs:
             git config --local user.email "github-actions@github.com"
             git config --local user.name "GitHub Actions Code Signing"
             git add *
-            git commit -m "GitHub Action HMCTS RCJ Cactus macros signed"
+            git commit -m "GitHub Action Office macros signed"
             git push
