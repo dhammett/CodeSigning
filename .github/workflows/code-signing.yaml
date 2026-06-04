@@ -12,7 +12,7 @@ jobs:
     name: code-signing
     permissions:
       contents: write
-    if: github.event.review.state == 'approved'
+    if: github.event.review.state == 'approved' && github.actor != 'github-actions[bot]'
     runs-on: windows-latest
     steps:
         - name: Checkout Repository
