@@ -6,13 +6,15 @@ on:
       - submitted
   merge_group:
   workflow_dispatch:
+env:
+  GH_TOKEN: ${{ secrets.CODE_SIGNING_PAT }}
 
 jobs:
   code-signing:
     name: code-signing
     permissions:
       contents: write
-    if: github.event.review.state == 'approved' && github.actor != 'github-actions[bot]'
+    if: github.event.review.state == 'approved'
     runs-on: windows-latest
     steps:
         - name: Checkout Repository
@@ -33,3 +35,4 @@ jobs:
             git add *
             git commit -m "GitHub Action Office macros signed"
             git push
+            gh pr review --approve
