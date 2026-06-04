@@ -44,7 +44,7 @@ jobs:
         - name: Sign Office Macros
           if:  contains(github.event.pull_request.labels.*.name, 'office-macros')
           shell: pwsh
-          run: .github/scripts/CodeSigning.ps1 -ClientId '${{ secrets.CODE_SIGNING_CLIENTID }}' -TenantId '${{ secrets.CODE_SIGNING_TENANTID }}' -KeyVaultUrl '${{ secrets.CODE_SIGNING_KEYVAULT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_CLIENTSECRET }}' -CertName '${{ secrets.CODE_SIGNING_CERT_NAME }}' -Path '.\Office'
+          run: .github/scripts/CodeSigning.ps1 -ClientId '${{ secrets.CODE_SIGNING_CLIENTID }}' -TenantId '${{ secrets.CODE_SIGNING_TENANTID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_CLIENTSECRET }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path '.\Office'
         - name: Commit changes to GitHub
           run: |
             git config --local user.email "github-actions@github.com"
