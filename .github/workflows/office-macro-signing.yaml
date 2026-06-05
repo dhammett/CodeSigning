@@ -5,7 +5,8 @@ on:
     branches:
       - main
     paths:
-      - 'Office/*'
+      - 'Office/**'
+      - '!Office/SignedFiles/**'
 
 jobs:
   office-macro-signing:
