@@ -6,14 +6,13 @@ on:
       - main
     paths:
       - 'Office/**'
-    paths-ignore:
-      - 'Office/SignedFiles/**'
 
 jobs:
   office-macro-signing:
     name: office-macro-signing
     permissions:
       contents: write
+    if: "!contains(github.event.head_commit.message, 'GitHub Action Office macros signed')"
     runs-on: windows-latest
     steps:
         - name: Checkout Repository
