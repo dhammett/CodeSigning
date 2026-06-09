@@ -103,8 +103,10 @@ if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
 			Write-Host "Code signing PFX file is not found!"
 			exit 1
 		}
+
+		$cert = Import-PfxCertificate -FilePath $codeSigningPfxPath -Password $Password -CertStoreLocation "cert:\LocalMachine\My" -ErrorCode Stop
 	} catch {
-		Write-Host "Converting CodeSigning PEM to PFX failed. $($_.Exception.Message)"
+		Write-Host "Converting CodeSigning PEM to PFX or importing failed. $($_.Exception.Message)"
 		exit 1
 	}
 }
