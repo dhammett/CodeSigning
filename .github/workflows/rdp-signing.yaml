@@ -8,7 +8,7 @@ on:
       - 'RDP/**.rdp'
 
 jobs:
-  office-macro-signing:
+  rdp-signing:
     name: rdp-signing
     permissions:
       contents: write
@@ -22,7 +22,7 @@ jobs:
         - name: Install Microsoft SignTool
           shell: pwsh
           run: .github/scripts/Install-MicrosoftSignTool.ps1 -Latest
-        - name: Sign Office Macros
+        - name: Sign RDP Files
           shell: pwsh
           run: .github/scripts/CodeSigning.ps1 -CodeSigningCert '${{ secrets.CODE_SIGNING_CERT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'RDP' -FileExtension '.rdp'
         - name: Commit changes to GitHub
