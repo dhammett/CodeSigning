@@ -14,18 +14,30 @@ jobs:
       contents: write
     runs-on: windows-latest
     steps:
-        - name: Checkout Repository
-          uses: actions/checkout@v6
-          with:
-            token: ${{ secrets.CODE_SIGNING_PAT }}
-            ref: ${{ github.head_ref }}
-        - name: Sign RDP Files
-          shell: pwsh
-          run: .github/scripts/CodeSigning.ps1 -CodeSigningCert '${{ secrets.CODE_SIGNING_CERT }}' -RootCert '${{ secrets.ROOT_CERT }}' -Password '${{ secrets.CODE_SIGNING_SECRET }}' -Path 'RDP' -FileExtension '.rdp'
-        - name: Commit changes to GitHub
-          run: |
-            git config --local user.name "GitHub Actions[bot]"
-            git config --local user.email "github-actions@users.noreply.github.com"
-            git add *
-            git commit -m "GitHub Action RDP signed"
-            git push
+      - name: Azure Login via OIDC
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+      - name: Azure PowerShell
+        uses: azure/powershell@f5b8adcfff1904872c7b98d4012d4914d74b1a82
+        with:
+          inlineScript: .github/scripts/InstallCodeSigningCert.ps1
+          azPSVersion: 'latest'
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.CODE_SIGNING_PAT }}
+          ref: ${{ github.head_ref }}
+      - name: Sign RDP Files
+        shell: pwsh
+        run: .github/scripts/CodeSigning.ps1 -SignTool -RootCert '${{ secrets.ROOT_CERT }}' -Thumbprint '' -Path 'RDP' -FileExtension '.rdp'
+      - name: Commit changes to GitHub
+        run: |
+          git config --local user.name "GitHub Actions[bot]"
+          git config --local user.email "github-actions@users.noreply.github.com"
+          git add *
+          git commit -m "GitHub Action RDP signed"
+          git push
