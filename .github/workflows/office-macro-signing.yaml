@@ -28,6 +28,13 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+      - name: Azure PowerShell
+        id: azure-powershell
+        uses: azure/powershell@f5b8adcfff1904872c7b98d4012d4914d74b1a82
+        with:
+          inlineScript: .github/scripts/InstallCertificates.ps1 -RootCert '${{ secrets.ROOT_CERT }}'
+          azPSVersion: 'latest'
       - name: Checkout Repository
         uses: actions/checkout@v6
         with:
@@ -38,7 +45,7 @@ jobs:
         run: .github/scripts/InstallPrerequisites.ps1 -Latest
       - name: Sign Office Macros
         shell: pwsh
-        run: .github/scripts/CodeSigning.ps1 -AzureSignTool -TenantId '${{ secrets.CODE_SIGNING_TENANTID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -RootCert '${{ secrets.ROOT_CERT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
+        run: .github/scripts/CodeSigning.ps1 -AzureSignTool -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
       - name: Commit changes to GitHub
         run: |
           git config --local user.name "GitHub Actions[bot]"

@@ -1,13 +1,18 @@
+[CmdletBinding(DefaultParameterSetName="DoNotImportCert")]
 param(
+	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
 	[switch]$ImportCert,
-	[Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true, ParameterSetName="DoNotImportCert")]
+	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
     [string]$RootCert,
+	[Parameter(ParameterSetName="DoNotImportCert")]
+	[Parameter(ParameterSetName="ImportCert")]
     [string]$IntermediateCert,
-	[Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
 	[string]$TenantId,
-	[Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
 	[string]$KeyVaultName,
-	[Parameter(Mandatory=$true)]
+	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
 	[string]$CertName
 )
 
