@@ -50,7 +50,7 @@ try {
 	exit 1
 }
 
-$signTool = @{
+$signToolDetails = @{
 	Path = $null;
 	Major = 0;
 	Minor = 0;
@@ -64,15 +64,15 @@ $patternMatch = $patternMatch -replace "[\)]","\)"
 
 foreach ($signToolFile in $signToolFiles) {
 	if ($signToolFile.DirectoryName -match "^$($patternMatch)bin\\(?<Major>\d+)\.(?<Minor>\d+)\.(?<Build>\d+)\.(?<Revision>\d+)\\x86$") {
-		if ($Matches.Major -gt $signTool.Major -or
-			($Matches.Major -eq $signTool.Major -and $Matches.Minor -gt $signTool.Minor) -or
-			($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor -and $Matches.Build -gt $signTool.Build) -or
-			($Matches.Major -eq $signTool.Major -and $Matches.Minor -eq $signTool.Minor -and $Matches.Build -eq $signTool.Build -and $Matches.Revision -gt $signTool.Revision)) {
-			$signTool.Path = "$($signToolFile.DirectoryName)\"
-			$signTool.Major = $Matches.Major
-			$signTool.Minor = $Matches.Minor
-			$signTool.Build = $Matches.Build
-			$signTool.Revision = $Matches.Revision
+		if ($Matches.Major -gt $signToolDetails.Major -or
+			($Matches.Major -eq $signToolDetails.Major -and $Matches.Minor -gt $signToolDetails.Minor) -or
+			($Matches.Major -eq $signToolDetails.Major -and $Matches.Minor -eq $signToolDetails.Minor -and $Matches.Build -gt $signToolDetails.Build) -or
+			($Matches.Major -eq $signToolDetails.Major -and $Matches.Minor -eq $signToolDetails.Minor -and $Matches.Build -eq $signToolDetails.Build -and $Matches.Revision -gt $signToolDetails.Revision)) {
+			$signToolDetails.Path = "$($signToolFile.DirectoryName)\"
+			$signToolDetails.Major = $Matches.Major
+			$signToolDetails.Minor = $Matches.Minor
+			$signToolDetails.Build = $Matches.Build
+			$signToolDetails.Revision = $Matches.Revision
 		}
 	}
 }
@@ -102,9 +102,9 @@ $fileCount = 0
 foreach ($file in $files) {
 	if ($officeFileExtensions -contains $file.Extension) {
 		if ($SignTool.IsPresent) {
-			& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /sha1 $Thumbprint /sm /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($file.FullName)"
+			& C:\OfficeSIP\OffSign.bat "$($signToolDetails.Path)" "sign /sha1 $Thumbprint /sm /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($file.FullName)"
 		} elseif ($AzureSignTool.IsPresent) {
-			& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvm -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
+			& C:\OfficeSIP\AzureOffSign.bat "$($signToolDetails.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvm -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
 		}
 		
 		if ($LastExitCode -ne 0) {
@@ -112,14 +112,14 @@ foreach ($file in $files) {
 			continue
 		}
 	} elseif ($file.Extension -eq ".rdp") {
-		if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
-			& "$($env:SYSTEMROOT)\System32\rdpsign.exe" /sha256 $cert.Thumbprint /v "$($file.FullName)"
+		if ($SignTool.IsPresent) {
+			& "$($env:SYSTEMROOT)\System32\rdpsign.exe" /sha256 $Thumbprint /v "$($file.FullName)"
 			if ($LastExitCode -ne 0) {
 				Write-Host "Signing RDP file '$($file.FullName)' failed with error code $LastExitCode"
 				continue
 			}
 		} else {
-			Write-Host "Need to specify the CodeSigningCert script parameter to sign RDP file. The ClientId option does not work"
+			Write-Host "Need to specify the SignTool script parameter to sign RDP files!"
 			continue
 		}
 	}else {
@@ -141,5 +141,3 @@ Write-Host "File signing succeeeded for $fileCount out of $($files.Count)"
 if ($fileCount -ne $files.Count) {
 	exit 1
 }
-
-Remove-Item -Path $codeSigningPfxPath,$codeSigningPemPath,$rootCertPath,$intermediateCertPath -ErrorAction SilentlyContinue
