@@ -34,7 +34,7 @@ jobs:
           azPSVersion: 'latest'
       - name: Sign RDP Files
         shell: pwsh
-        run: .github/scripts/CodeSigning.ps1 -SignTool -RootCert '${{ secrets.ROOT_CERT }}' -Thumbprint '${{ steps.azure-powershell.outputs.Thumbprint }}' -Path 'RDP' -FileExtension '.rdp'
+        run: .github/scripts/CodeSigning.ps1 -SignTool -Thumbprint '${{ steps.azure-powershell.outputs.Thumbprint }}' -Path 'RDP' -FileExtension '.rdp'
       - name: Commit changes to GitHub
         run: |
           git config --local user.name "GitHub Actions[bot]"
