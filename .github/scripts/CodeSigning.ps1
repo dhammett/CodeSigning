@@ -170,7 +170,8 @@ foreach ($file in $files) {
 		if ($PSBoundParameters.ContainsKey("CodeSigningCert")) {
 			& C:\OfficeSIP\OffSign.bat "$($signtool.Path)" "sign /f $codeSigningPfxPath /p $Password /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($file.FullName)"
 		} elseif ($PSBoundParameters.ContainsKey("ClientId")) {
-			& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
+			# & C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvi $ClientId -kvs $Password -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
+			& C:\OfficeSIP\AzureOffSign.bat "$($signtool.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvm -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
 		}
 		
 		if ($LastExitCode -ne 0) {
