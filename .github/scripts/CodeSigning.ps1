@@ -1,22 +1,13 @@
-[CmdletBinding(DefaultParameterSetName= 'AzureSignTool')]
 param(
-	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
-	[switch]$SignTool,
-	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
-	[switch]$AzureSignTool,
-	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[Parameter(Mandatory=$true)]
 	[string]$TenantId,
-	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[Parameter(Mandatory=$true)]
 	[string]$KeyVaultUrl,
-	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[Parameter(Mandatory=$true)]
 	[string]$CertName,
-	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
-	[string]$Thumbprint,
-	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
-	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[Parameter(Mandatory=$true)]
 	[string]$Path,
-	[Parameter(Mandatory=$true, ParameterSetName="SignTool")]
-	[Parameter(Mandatory=$true, ParameterSetName="AzureSignTool")]
+	[Parameter(Mandatory=$true)]
 	[string[]]$FileExtension
 )
 
@@ -101,29 +92,14 @@ $fileCount = 0
 
 foreach ($file in $files) {
 	if ($officeFileExtensions -contains $file.Extension) {
-		if ($SignTool.IsPresent) {
-			& C:\OfficeSIP\OffSign.bat "$($signToolDetails.Path)" "sign /sha1 $Thumbprint /sm /fd SHA256 /tr http://timestamp.digicert.com /td SHA256" "verify /pa" "$($file.FullName)"
-		} elseif ($AzureSignTool.IsPresent) {
-			& C:\OfficeSIP\AzureOffSign.bat "$($signToolDetails.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvm -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
-		}
+		& C:\OfficeSIP\AzureOffSign.bat "$($signToolDetails.Path)" "sign -kvu $KeyVaultUrl -kvt $TenantId -kvm -kvc $CertName -fd SHA256 -tr http://timestamp.digicert.com -td SHA256" "verify /pa" "$($file.FullName)"
 		
 		if ($LastExitCode -ne 0) {
 			Write-Host "Code signing failed on file $($file.FullName). Error Code $LastExitCode"
 			continue
 		}
-	} elseif ($file.Extension -eq ".rdp") {
-		if ($SignTool.IsPresent) {
-			& "$($env:SYSTEMROOT)\System32\rdpsign.exe" /sha256 $Thumbprint /v "$($file.FullName)"
-			if ($LastExitCode -ne 0) {
-				Write-Host "Signing RDP file '$($file.FullName)' failed with error code $LastExitCode"
-				continue
-			}
-		} else {
-			Write-Host "Need to specify the SignTool script parameter to sign RDP files!"
-			continue
-		}
-	}else {
-		Write-Host "File extension $($file.Extension) is not currently supported, '$file.FullName'"
+	} else {
+		Write-Host "File extension $($file.Extension) is not currently supported, '$($file.FullName)'"
 		continue
 	}
 	

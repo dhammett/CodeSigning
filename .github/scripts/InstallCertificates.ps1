@@ -1,22 +1,9 @@
-[CmdletBinding(DefaultParameterSetName="DoNotImportCert")]
 param(
-	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
-	[switch]$ImportCert,
-	[Parameter(Mandatory=$true, ParameterSetName="DoNotImportCert")]
-	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
+	[Parameter(Mandatory=$true)]
     [string]$RootCert,
-	[Parameter(ParameterSetName="DoNotImportCert")]
-	[Parameter(ParameterSetName="ImportCert")]
-    [string]$IntermediateCert,
-	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
-	[string]$TenantId,
-	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
-	[string]$KeyVaultName,
-	[Parameter(Mandatory=$true, ParameterSetName="ImportCert")]
-	[string]$CertName
+    [string]$IntermediateCert
 )
 
-$codeSigningCertPath = "$($env:TEMP)\CodeSigning.pfx"
 $rootCertPath = "$($env:TEMP)\Root.cer"
 $intermediateCertPath = "$($env:TEMP)\Intermediate.cer"
 
@@ -52,18 +39,4 @@ try {
 } catch {
 	Write-Host "Importing intermediate cert into cert store failed. $($_.Exception.Message)"
 	exit 1
-}
-
-if ($ImportCert.IsPresent) {
-	try {
-		$pemCert = Get-AzKeyVaultSecret -VaultName $KeyVaultName -Name $CertName -AsPlainText -ErrorAction Stop
-		$pfxCert = [Convert]::FromBase64String($pemCert)
-		$pfxCert | Out-File $codeSigningCertPath -ErrorAction Stop
-		$cert = Import-PfxCertificate -FilePath $codeSigningCertPath -CertStoreLocation "Cert:\LocalMachine\My" -ErrorAction Stop
-		"Thumbprint=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -ErrorAction Stop
-		Remove-Item -Path $codeSigningCertPath -Force -Confirm:$false -ErrorAction SilentlyContinue
-	} catch {
-		Write-Host "Importing certificate failed. $($_.Exception.Message)"
-		exit 1
-	}
 }
