@@ -65,5 +65,5 @@ jobs:
         shell: pwsh
         run: |
           $pr_url = '${{ steps.commit.outputs.pr_url }}'
-          gh pr review --aprove $pr_url
-          gh pr merge --squash $pr_url
+          gh pr review $pr_url --approve
+          gh pr merge --auto --squash $pr_url
