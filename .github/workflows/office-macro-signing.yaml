@@ -31,7 +31,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
-          token: ${{ secrets.CODE_SIGNING_PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
       - name: Install Certificates
         shell: pwsh
@@ -46,6 +46,9 @@ jobs:
         run: |
           git config --local user.name "GitHub Actions[bot]"
           git config --local user.email "github-actions@users.noreply.github.com"
+          git checkout -b github-actions-office-macro-signing
           git add *
           git commit -m "GitHub Action Office macros signed"
           git push
+          gh pr create --title "github-actions-office-macro-signing"
+          gh pr merge --auto
