@@ -50,9 +50,11 @@ jobs:
         run: |
           git config --local user.name "GitHub Actions[bot]"
           git config --local user.email "github-actions@users.noreply.github.com"
-          git checkout -b github-actions-office-macro-signing
+          $datetime = (Get-Date -Format s) -replace "[T: -]",""
+          $branchname = "github-actions-office-macro-signing-$datetime"
+          git checkout -b $branchname
           git add *
           git commit -m "GitHub Action Office macros signed"
-          git push  --set-upstream origin github-actions-office-macro-signing
-          $PR_URL=gh pr create --base main --head github-actions-office-macro-signing --title "GitHub Actions office macro signing" --body "Created by GitHub Actions"
+          git push  --set-upstream origin $branchname
+          $PR_URL=gh pr create --base main --head $branchname --title "GitHub Actions office macro signing" --body "Created by GitHub Actions"
           gh pr merge --auto --squash $PR_URL
