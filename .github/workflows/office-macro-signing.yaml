@@ -13,8 +13,6 @@ on:
       - 'Office/**.ppam'
       - 'Office/**.xlsm'
       - 'Office/**.xltm'
-env:
-  GH_TOKEN: ${{ github.token }}
 
 jobs:
   office-macro-signing:
@@ -46,6 +44,7 @@ jobs:
         shell: pwsh
         run: .github/scripts/CodeSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
       - name: Commit changes to GitHub
+        id: commit
         shell: pwsh
         run: |
           git config --local user.name "GitHub Actions[bot]"
@@ -56,5 +55,13 @@ jobs:
           git add *
           git commit -m "GitHub Action Office macros signed"
           git push  --set-upstream origin $branchname
-          $PR_URL=gh pr create --base main --head $branchname --title "GitHub Actions office macro signing" --body "Created by GitHub Actions"
-          gh pr merge --auto --squash $PR_URL
+          $pr_url=gh pr create --base main --head $branchname --title "GitHub Actions office macro signing" --body "Created by GitHub Actions"
+          "pr_url=$pr_url" >> $env:GITHUB_OUTPUT
+      - name: Create PR
+        env:
+          GH_TOKEN: ${{ secrets.CODE_SIGNING_PAT }}
+        shell: pwsh
+        run: |
+          $pr_url = '${{ steps.commit.outputs.pr_url }}'
+          gh pr review --aprove $pr_url
+          gh pr merge --auto --squash $pr_url
