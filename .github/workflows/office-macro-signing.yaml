@@ -20,6 +20,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      pull-requests: write
     runs-on: windows-latest
     steps:
       - name: Azure Login via OIDC
@@ -46,9 +47,11 @@ jobs:
         run: |
           git config --local user.name "GitHub Actions[bot]"
           git config --local user.email "github-actions@users.noreply.github.com"
-          git checkout -b github-actions-office-macro-signing
+          git checkout --set-upstream origin -b github-actions-office-macro-signing
           git add *
           git commit -m "GitHub Action Office macros signed"
           git push
-          gh pr create --title "github-actions-office-macro-signing"
-          gh pr merge --auto
+          PR_URL=$(gh pr create --base main --head github-actions-office-macro-signing --title "GitHub Actions office macro signing" --body "Created by GitHub Actions")
+          gh pr merge --auto --squash $PR_URL
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
