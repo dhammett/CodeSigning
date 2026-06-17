@@ -13,6 +13,8 @@ on:
       - 'Office/**.ppam'
       - 'Office/**.xlsm'
       - 'Office/**.xltm'
+env:
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
   office-macro-signing:
@@ -32,7 +34,7 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           ref: ${{ github.head_ref }}
       - name: Install Certificates
         shell: pwsh
@@ -47,11 +49,9 @@ jobs:
         run: |
           git config --local user.name "GitHub Actions[bot]"
           git config --local user.email "github-actions@users.noreply.github.com"
-          git checkout --set-upstream origin -b github-actions-office-macro-signing
+          git checkout -b github-actions-office-macro-signing
           git add *
           git commit -m "GitHub Action Office macros signed"
-          git push
+          git push  --set-upstream origin github-actions-office-macro-signing
           PR_URL=$(gh pr create --base main --head github-actions-office-macro-signing --title "GitHub Actions office macro signing" --body "Created by GitHub Actions")
           gh pr merge --auto --squash $PR_URL
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
