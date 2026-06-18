@@ -70,7 +70,7 @@ jobs:
         if: steps.check_label.outputs.rdpsigning == 'true'
         uses: azure/powershell@v3
         with:
-          inlineScript: ./github/scripts/RDPSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ secrets.CODE_SIGNING_KEYVAULT }}' -CertName '${{ secrets.CODE_SIGNING_CERT_NAME }}' -Path 'RDP'
+          inlineScript: .github/scripts/RDPSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ secrets.CODE_SIGNING_KEYVAULT }}' -CertName '${{ secrets.CODE_SIGNING_CERT_NAME }}' -Path 'RDP'
           azPSVersion: 'latest'
       - name: Commit changes to GitHub
         if: steps.check_label.outputs.signing == 'true'
