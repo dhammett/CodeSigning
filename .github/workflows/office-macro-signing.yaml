@@ -26,7 +26,7 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
-    if: github.event.pull_request.state == 'approved'
+    if: github.event.review.state == 'approved'
     runs-on: windows-latest
     steps:
       - name: Check for Label
