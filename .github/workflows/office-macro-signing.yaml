@@ -1,26 +1,32 @@
 name: office-macro-signing
 run-name: Office Macro Signing
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Office/**.docm'
-      - 'Office/**.dotm'
-      - 'Office/**.pptm'
-      - 'Office/**.potm'
-      - 'Office/**.ppsm'
-      - 'Office/**.ppam'
-      - 'Office/**.xlsm'
-      - 'Office/**.xltm'
+  pull_request_review:
+    types:
+      - submitted
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
+  office-macro-signing-labeler:
+    name: office-macro-signing-labeler
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: office-macro-signing-labeler
+        uses: actions/labeler@v6
+  
   office-macro-signing:
     name: office-macro-signing
+    needs: office-macro-signing-labeler
     permissions:
       contents: write
-      id-token: write
       pull-requests: write
+      id-token: write
+    if: contains(github.event.pull_request.labels.*.name, 'office-macros-signing')
     runs-on: windows-latest
     steps:
       - name: Azure Login via OIDC
@@ -32,8 +38,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
-          token: ${{ github.token }}
-          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.event.pull_request.head.ref }}
       - name: Install Certificates
         shell: pwsh
         run: .github/scripts/InstallCertificates.ps1 -RootCert '${{ secrets.ROOT_CERT }}'
@@ -45,25 +51,20 @@ jobs:
         run: .github/scripts/CodeSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
       - name: Commit changes to GitHub
         id: commit
-        env:
-          GH_TOKEN: ${{ github.token }}
         shell: pwsh
         run: |
           git config --local user.name "GitHub Actions[bot]"
           git config --local user.email "github-actions@users.noreply.github.com"
-          $datetime = (Get-Date -Format s) -replace "[T: -]",""
-          $branchname = "github-actions-office-macro-signing-$datetime"
-          git checkout -b $branchname
+          $branch = "${{ github.event.pull_request.head.ref }}"
+          $pr_url = gh pr view $branch --json url -q .url
+          "pr_url=$pr_url" >> $env:GITHUB_OUTPUT
           git add *
           git commit -m "GitHub Action Office macros signed"
-          git push  --set-upstream origin $branchname
-          $pr_url=gh pr create --base main --head $branchname --title "GitHub Actions office macro signing" --body "Created by GitHub Actions"
-          "pr_url=$pr_url" >> $env:GITHUB_OUTPUT
-      - name: Create PR
+          git push
+      - name: Approve PR
         env:
-          GH_TOKEN: ${{ secrets.CODE_SIGNING_PAT }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
         run: |
           $pr_url = '${{ steps.commit.outputs.pr_url }}'
-          gh pr review $pr_url --approve
-          gh pr merge --auto --squash $pr_url
+          "$pr_url"
