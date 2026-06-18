@@ -2,7 +2,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string]$TenantId,
     [Parameter(Mandatory=$true)]
-    [string]$VaultNameUrl,
+    [string]$KeyVaultUrl,
     [Parameter(Mandatory=$true)]
     [string]$CertName,
     [Parameter(Mandatory=$true)]
