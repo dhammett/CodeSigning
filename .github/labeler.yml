@@ -8,3 +8,6 @@ office-macro-signing:
     - any-glob-to-any-file: 'Office/*.ppam'
     - any-glob-to-any-file: 'Office/*.xlsm'
     - any-glob-to-any-file: 'Office/*.xltm'
+rdp-signing:
+  - changed-files:
+    - any-glob-to-any-file: 'RDP/*.rdp'
