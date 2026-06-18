@@ -37,6 +37,8 @@ jobs:
           $result = $result | ConvertFrom-Json
           if ($result.labels.name -contains "office-macro-signing") {
             "signing=true" >> $env:GITHUB_OUTPUT
+          } else {
+            "signing=false" >> $env:GITHUB_OUTPUT
           }
       - name: Azure Login via OIDC
         if: steps.check_label.outputs.signing == 'true'
@@ -64,6 +66,7 @@ jobs:
         shell: pwsh
         run: .github/scripts/CodeSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
       - name: Commit changes to GitHub
+        id: commit
         if: steps.check_label.outputs.signing == 'true'
         shell: pwsh
         run: |
