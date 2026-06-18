@@ -65,7 +65,7 @@ jobs:
       - name: Sign Office Macros
         if: steps.check_label.outputs.officemacrosigning == 'true'
         shell: pwsh
-        run: .github/scripts/CodeSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ secrets.CODE_SIGNING_KEYVAULT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
+        run: .github/scripts/CodeSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ secrets.CODE_SIGNING_KEYVAULT }}' -CertName '${{ secrets.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
       - name: RDP Signing
         if: steps.check_label.outputs.rdpsigning == 'true'
         uses: azure/powershell@v3
