@@ -1,6 +1,9 @@
 name: office-macro-signing
 run-name: Office Macro Signing
 on:
+  pull_request:
+    types:
+      - opened
   pull_request_review:
     types:
       - submitted
@@ -14,6 +17,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: office-macro-signing-labeler
@@ -26,7 +30,7 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
-    if: contains(github.event.pull_request.labels.*.name, 'office-macro-signing')
+    if: github.event_name == 'pull_request_review' && contains(join(github.event.pull_request.labels.*.name, ','), 'office-macro-signing')
     runs-on: windows-latest
     steps:
       - name: Azure Login via OIDC
