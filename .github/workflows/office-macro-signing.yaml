@@ -1,9 +1,6 @@
 name: office-macro-signing
 run-name: Office Macro Signing
 on:
-  pull_request:
-    types:
-      - opened
   pull_request_review:
     types:
       - submitted
@@ -17,7 +14,6 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
-    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: office-macro-signing-labeler
@@ -30,31 +26,45 @@ jobs:
       contents: write
       pull-requests: write
       id-token: write
-    if: github.event_name == 'pull_request_review' && contains(join(github.event.pull_request.labels.*.name, ','), 'office-macro-signing')
+    if: github.event.pull_request.state == 'approved'
     runs-on: windows-latest
     steps:
+      - name: Check for Label
+        id: check_label
+        shell: pwsh
+        run: |
+          $result = gh pr view --json labels
+          $result = $result | ConvertFrom-Json
+          if ($result.labels.name -contains "office-macro-signing") {
+            "signing=true" >> $env:GITHUB_OUTPUT
+          }
       - name: Azure Login via OIDC
+        if: steps.check_label.outputs.signing == 'true'
         uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
       - name: Checkout Repository
+        if: steps.check_label.outputs.signing == 'true'
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Install Certificates
+        if: steps.check_label.outputs.signing == 'true'
         shell: pwsh
         run: .github/scripts/InstallCertificates.ps1 -RootCert '${{ secrets.ROOT_CERT }}'
       - name: Install Prerequisites
+        if: steps.check_label.outputs.signing == 'true'
         shell: pwsh
         run: .github/scripts/InstallPrerequisites.ps1 -Latest
       - name: Sign Office Macros
+        if: steps.check_label.outputs.signing == 'true'
         shell: pwsh
         run: .github/scripts/CodeSigning.ps1 -TenantId '${{ secrets.AZURE_TENANT_ID }}' -KeyVaultUrl '${{ vars.CODE_SIGNING_KEYVAULT }}' -CertName '${{ vars.CODE_SIGNING_CERT_NAME }}' -Path 'Office' -FileExtension '.docm','.dotm','.pptm','.potm','.ppsm','.ppam','.xlsm','.xltm'
       - name: Commit changes to GitHub
-        id: commit
+        if: steps.check_label.outputs.signing == 'true'
         shell: pwsh
         run: |
           git config --local user.name "GitHub Actions[bot]"
@@ -66,6 +76,7 @@ jobs:
           git commit -m "GitHub Action Office macros signed"
           git push
       - name: Approve PR
+        if: steps.check_label.outputs.signing == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: pwsh
