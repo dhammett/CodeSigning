@@ -1,0 +1,10 @@
+office-macro-signing:
+  - changed-files:
+    - any-glob-to-any-file: 'Office/*.docm'
+    - any-glob-to-any-file: 'Office/*.dotm'
+    - any-glob-to-any-file: 'Office/*.pptm'
+    - any-glob-to-any-file: 'Office/*.potm'
+    - any-glob-to-any-file: 'Office/*.ppsm'
+    - any-glob-to-any-file: 'Office/*.ppam'
+    - any-glob-to-any-file: 'Office/*.xlsm'
+    - any-glob-to-any-file: 'Office/*.xltm'
